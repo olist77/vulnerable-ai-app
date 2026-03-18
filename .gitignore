@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application
+*.db
+*.sqlite
+*.log
+models/*.pkl
+models/*.h5
+models/*.pt
+models/*.onnx
+.env
+
+# NOTE: For this vulnerable demo, we're NOT ignoring:
+# - config.py (intentionally contains exposed secrets)
+# - .env files (for demo purposes)
+# In a real application, these MUST be in .gitignore!
