@@ -53,7 +53,7 @@ They are two separate, independent tools that analyze code differently and they 
     Pattern: password\s*=\s*"[^"]*"
 
 ### **🤖 Claude Code (AI-Powered Review)**
-**Type:** AI code reviewer (uses Claude Sonnet 4.0)
+**Type:** AI code reviewer
 **Method:** Contextual AI analysis with reasoning
 **Focus:** Logic flaws, design issues, best practices
 **Analysis:** Understands code intent and context
@@ -61,7 +61,7 @@ They are two separate, independent tools that analyze code differently and they 
 **Output:** Natural language explanations with fix suggestions
 
 **What Claude Code Finds:**
-✅ SQL injection vulnerabilities
+✅ SQL injection misconfigurations
 ✅ Command injection risks
 ✅ Authentication/authorization flaws
 ✅ Logic errors and race conditions
@@ -115,7 +115,7 @@ CWE-89: SQL Injection
 | **Logic flaws** | ❌ Limited | ✅ Excellent |
 | **Context understanding** | ❌ No | ✅ Yes |
 | **Fix suggestions** | ⚠️ Generic | ✅ Detailed |
-| **False positives** | ⚠️ Medium | ✅ Lower |
+| **False positives** |  ✅ Low | ✅ Lower |
 | **Speed** | ✅ Very fast | ⚠️ Slower |
 
 ---
