@@ -4,7 +4,7 @@
 
 **THIS APPLICATION IS INTENTIONALLY INSECURE**
 
-This application contains numerous deliberately introduced security vulnerabilities for the purpose of demonstrating Trend Vision One's AI SBOM (Software Bill of Materials) and code security scanning capabilities.
+This application contains numerous deliberately introduced security vulnerabilities for the purpose of demonstrating Trend Vision One's AI SBOM (Software Bill of Materials) and code security scanning capabilities bombined with Code Claude scannning during each Pull Request.
 
 **DO NOT USE IN PRODUCTION**
 **DO NOT DEPLOY THIS APPLICATION TO ANY LIVE ENVIRONMENT**
@@ -22,6 +22,210 @@ This demo application is designed to trigger comprehensive security findings in 
 4. **Code Security** - Insecure coding patterns
 5. **Container Security** - Docker/IaC misconfigurations
 6. **AI-Specific Risks** - Prompt injection, unsafe deserialization, etc.
+
+TMAS Integration with Claude Code part of the same GitHub Action. 
+They are two separate, independent tools that analyze code differently and they can coexist:
+
+### **🔴 TMAS (Trend Micro Artifact Scanner)**
+**Type:** Static security scanner
+**Method:** Pattern matching & signature-based detection
+**Focus:** Known vulnerabilities and secrets
+**Analysis:** Pre-defined rules and CVE databases
+**Speed:** Very fast (seconds)
+**Output:** SARIF reports with specific CVE/CWE IDs
+
+**What TMAS Finds:**
+✅ Hardcoded secrets (API keys, passwords, tokens)
+✅ Known CVEs in dependencies (libraries, packages)
+✅ Container image vulnerabilities
+✅ License compliance issues
+✅ Malware signatures
+
+**Example TMAS findings:**
+🔴 Line 11: API_KEY = "sk-1234..."
+    Finding: Anthropic API Key detected
+    Severity: CRITICAL
+    Pattern: sk-[a-zA-Z0-9]{40}
+
+🔴 Line 12: DB_PASSWORD = "admin123"
+    Finding: Generic password in variable
+    Severity: HIGH
+    Pattern: password\s*=\s*"[^"]*"
+
+### **🤖 Claude Code (AI-Powered Review)**
+**Type:** AI code reviewer (uses Claude Sonnet 4.0)
+**Method:** Contextual AI analysis with reasoning
+**Focus:** Logic flaws, design issues, best practices
+**Analysis:** Understands code intent and context
+**Speed:** Slower (1-3 minutes per review)
+**Output:** Natural language explanations with fix suggestions
+
+**What Claude Code Finds:**
+✅ SQL injection vulnerabilities
+✅ Command injection risks
+✅ Authentication/authorization flaws
+✅ Logic errors and race conditions
+✅ Insecure design patterns
+✅ Missing input validation
+✅ Business logic vulnerabilities
+✅ Code quality and maintainability issues
+✅ Security best practice violations
+
+**Example Claude Code findings:**
+
+🤖 Line 18: query = f"SELECT * FROM users WHERE id = {user_id}"
+
+Comment from claude[bot]:
+⚠️ SQL Injection Vulnerability
+
+This code is vulnerable to SQL injection attacks. The user_id parameter 
+is directly interpolated into the SQL query without any sanitization or 
+parameterization.
+
+Impact: An attacker could manipulate the user_id to:
+- Extract sensitive data from other tables
+- Modify or delete database records
+- Execute arbitrary SQL commands
+
+Example attack:
+  /user/1 OR 1=1--
+
+Recommendation:
+Use parameterized queries instead:
+
+```python
+query = "SELECT * FROM users WHERE id = ?"
+result = conn.execute(query, (user_id,)).fetchall()
+```
+
+Severity: CRITICAL
+CWE-89: SQL Injection
+
+
+---
+
+## 📊 **Side-by-Side Comparison:**
+
+| Feature | TMAS | Claude Code |
+|---------|------|-------------|
+| **Detection Method** | Pattern matching | AI reasoning |
+| **Hardcoded secrets** | ✅ Excellent | ✅ Good |
+| **Known CVEs** | ✅ Excellent | ❌ Not focused |
+| **SQL Injection** | ⚠️ Basic patterns | ✅ Excellent |
+| **Logic flaws** | ❌ Limited | ✅ Excellent |
+| **Context understanding** | ❌ No | ✅ Yes |
+| **Fix suggestions** | ⚠️ Generic | ✅ Detailed |
+| **False positives** | ⚠️ Medium | ✅ Lower |
+| **Speed** | ✅ Very fast | ⚠️ Slower |
+
+---
+
+## 🎯 **Example: Same Vulnerability, Different Findings:**
+
+### **Code:**
+python
+API_KEY = "sk-1234567890abcdef"
+
+
+### **TMAS Report:**
+json
+{
+  "ruleId": "secret-detection-001",
+  "message": "Anthropic API Key detected",
+  "severity": "CRITICAL",
+  "pattern": "sk-[a-zA-Z0-9]+",
+  "action": "Remove or use environment variable"
+}
+
+
+### **Claude Code Comment:**
+
+🤖 Hardcoded API Credentials
+
+This line contains a hardcoded Anthropic API key, which is a serious 
+security vulnerability. If this code is committed to version control:
+
+1. The key is permanently in git history
+2. Anyone with repo access can use it
+3. Revocation requires rotating the key
+
+This violates the principle of least privilege and makes key rotation 
+difficult. Additionally, different environments (dev, staging, prod) 
+should use different keys.
+
+Recommendation:
+- Store in environment variables
+- Use a secrets manager (AWS Secrets Manager, HashiCorp Vault)
+- Never commit secrets to git
+
+Fix:
+python
+import os
+API_KEY = os.getenv('ANTHROPIC_API_KEY')
+if not API_KEY:
+    raise ValueError("ANTHROPIC_API_KEY environment variable not set")
+
+
+Related: OWASP A07:2021 - Identification and Authentication Failures
+
+
+## 🔗 **Can They Work Together?**
+
+**Yes! They complement each other:**
+
+### **Ideal Workflow:**
+
+1. **TMAS runs first** (fast, catches obvious issues)
+   - Scans for secrets and known CVEs
+   - Blocks PR if critical issues found
+   
+2. **Claude Code reviews after** (deep analysis)
+   - Reviews logic and design
+   - Provides contextual security advice
+   - Suggests improvements
+
+### **Example Combined Workflow:**
+yaml
+name: Complete Security Review
+
+on:
+  pull_request:
+
+jobs:
+  tmas-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: TMAS Scan
+        # Fast security scan
+        # Fails if CRITICAL findings
+        
+  claude-review:
+    runs-on: ubuntu-latest
+    needs: tmas-scan  # Only run after TMAS passes
+    if: github.event.comment.body == '@claude'
+    steps:
+      - name: Claude Code Review
+        # Deep AI-powered review
+        # Posts inline comments
+
+
+## ✅ **Summary:**
+
+**Q: Does Claude Code just add context to TMAS findings?**
+**A: No! Claude Code is completely independent.**
+
+**What they do:**
+- **TMAS:** Pattern-based scanner (finds secrets, CVEs)
+- **Claude Code:** AI code reviewer (finds logic flaws, design issues)
+
+**They are complementary:**
+- TMAS = Fast, automated security checks
+- Claude Code = Deep, contextual code review
+
+**Both are valuable:**
+- Use TMAS for automated gating (block bad code)
+- Use Claude Code for learning and improvement (educate developers)
+
 
 ---
 
@@ -108,48 +312,48 @@ config = eval(model_config_str)  # Arbitrary code execution
 - **Attack**: Any Python expression → full system compromise
 
 **D. Dill & Marshal Loading** ⚠️ **HIGH**
-```python
+python
 model = dill.load(f)     # More dangerous than pickle
 data = marshal.load(f)    # Can load code objects
-```
+
 
 **E. Download & Deserialize** ⚠️ **CRITICAL**
-```python
+python
 response = requests.get(url, verify=False)  # No SSL verification
 model = pickle.loads(response.content)      # RCE from network
-```
+
 
 ---
 
 ### 4. AI-Specific Vulnerabilities (app.py)
 
 #### A. Prompt Injection ⚠️ **HIGH**
-```python
+python
 @app.route('/api/chat', methods=['POST'])
 def chat():
     user_prompt = data.get('prompt', '')
     # No sanitization or validation
     response = chain.run(user_input=user_prompt)
-```
+
 - **Risk**: Manipulate AI behavior, data exfiltration
 - **Attack**: "Ignore previous instructions and..."
 
 #### B. Unsafe AI Output Handling ⚠️ **CRITICAL**
-```python
+python
 if "execute:" in response:
     code = response.split("execute:")[1]
     result = eval(code)  # Executing AI-generated code!
-```
+
 - **Risk**: AI output → arbitrary code execution
 - **Attack**: Prompt engineer AI to return malicious code
 
 #### C. No Rate Limiting ⚠️ **MEDIUM**
-```python
+python
 response = openai.Completion.create(
     prompt=prompt,  # Unbounded
     max_tokens=2000  # High cost per request
 )
-```
+
 - **Risk**: Cost attack, resource exhaustion
 - **Attack**: Spam API calls → $$$
 
@@ -158,36 +362,36 @@ response = openai.Completion.create(
 ### 5. Classic Web Vulnerabilities (app.py)
 
 #### A. SQL Injection ⚠️ **CRITICAL**
-```python
+python
 query = f"SELECT * FROM users WHERE username = '{username}'"
 cursor.execute(query)
-```
+
 - **Attack**: `username = "' OR '1'='1"`
 
 #### B. Command Injection ⚠️ **CRITICAL**
-```python
+python
 result = os.system(command)  # User-provided command
 cmd = f"cat {filename}"
 subprocess.check_output(cmd, shell=True)
-```
+
 - **Attack**: `command = "ls; rm -rf /"`
 
 #### C. Path Traversal ⚠️ **HIGH**
-```python
+python
 model = load_untrusted_model(user_path)  # No validation
 filepath = f"/tmp/{file.filename}"  # User-controlled
-```
+
 - **Attack**: `path = "../../../etc/passwd"`
 
 #### D. Template Injection ⚠️ **HIGH**
-```python
+python
 template = f"<h1>Hello {user_input}!</h1>"
 return render_template_string(template)
-```
+
 - **Attack**: `name = "{{config.items()}}"`
 
 #### E. Information Disclosure ⚠️ **HIGH**
-```python
+python
 @app.route('/api/config')
 def get_config():
     return jsonify({
@@ -198,7 +402,7 @@ def get_config():
 @app.route('/debug/env')
 def debug_env():
     return jsonify(dict(os.environ))
-```
+
 
 ---
 
@@ -206,7 +410,7 @@ def debug_env():
 
 #### Dockerfile Vulnerabilities:
 
-```dockerfile
+dockerfile
 # 1. Running as root (no USER directive)
 # 2. Hardcoded secrets in ENV
 ENV OPENAI_API_KEY="sk-proj-..."
@@ -225,7 +429,7 @@ RUN apt-get install -y telnet vim git
 # 7. No resource limits
 # 8. Debug mode enabled
 CMD ["python", "app.py"]
-```
+
 
 **Container Security Findings:**
 - Running as root (UID 0)
