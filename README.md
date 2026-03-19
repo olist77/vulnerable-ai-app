@@ -1,4 +1,4 @@
-# Vulnerable AI Application - Security Scanning Demo
+# Vulnerable AI Application - Security Scanning Demo with Claude Code integration
 
 ## ⚠️ CRITICAL WARNING ⚠️
 
