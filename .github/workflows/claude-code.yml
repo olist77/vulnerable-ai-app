@@ -11,7 +11,7 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
-  # Removed id-token: write - not needed for Claude code review
+  id-token: write  # Required by Claude Code Action for OIDC authentication
 
 jobs:
   claude-review:
